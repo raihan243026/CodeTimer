@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeTimer - Comparative Programming</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --accent-color: #ff4d4d;
+            --card-bg: #2a2a2a;
+            --button-bg: #333333;
+        }
+
+        [data-theme="dark-red"] {
+            --bg-color: #2e0000;
+            --text-color: #ffcccc;
+            --accent-color: #ffffff;
+            --card-bg: #4a0000;
+            --button-bg: #660000;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        .clock {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .editor-section, .timer-section, .tracking-section {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        select, button, input {
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            background: var(--button-bg);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: var(--accent-color);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            resize: vertical;
+        }
+
+        .timer {
+            font-size: 2rem;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .tracking-section ul {
+            list-style: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .tracking-section li {
+            padding: 10px;
+            border-bottom: 1px solid var(--accent-color);
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                grid-template-columns: 2fr 1fr;
+            }
+
+            .editor-section {
+                grid-column: 1 / 2;
+            }
+
+            .timer-section, .tracking-section {
+                grid-column: 2 / 3;
+            }
+        }
+
+        @media (max-width: 767px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .clock {
+                font-size: 1rem;
+            }
+
+            textarea {
+                min-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CodeTimer</h1>
+            <div class="clock" id="digitalClock">00:00:00</div>
+            <button class="theme-toggle" id="themeToggle" title="Toggle Theme">🌙</button>
+        </header>
+        <div class="main-content">
+            <div class="editor-section">
+                <select id="languageSelect">
+                    <option value="c">C</option>
+                    <option value="cpp">C++</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python</option>
+                </select>
+                <input type="text" id="problemName" placeholder="Enter problem name">
+                <textarea id="codeEditor" placeholder="Write your code here..."></textarea>
+            </div>
+            <div class="timer-section">
+                <div class="timer" id="timer">00:00:00</div>
+                <button id="startTimer">Start Timer</button>
+                <button id="stopTimer">Stop Timer</button>
+                <button id="resetTimer">Reset Timer</button>
+                <button id="saveSession">Save Session</button>
+            </div>
+            <div class="tracking-section">
+                <h2>Session History</h2>
+                <ul id="sessionList"></ul>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        // Digital Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('digitalClock').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.dataset.theme = document.body.dataset.theme === 'dark-red' ? 'black' : 'dark-red';
+            themeToggle.textContent = document.body.dataset.theme === 'dark-red' ? '🌞' : '🌙';
+        });
+
+        // Timer Logic
+        let timerInterval;
+        let seconds = 0;
+        const timerDisplay = document.getElementById('timer');
+        const startButton = document.getElementById('startTimer');
+        const stopButton = document.getElementById('stopTimer');
+        const resetButton = document.getElementById('resetTimer');
+        const saveButton = document.getElementById('saveSession');
+
+        function updateTimer() {
+            seconds++;
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            timerDisplay.textContent = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        startButton.addEventListener('click', () => {
+            if (!timerInterval) {
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+        });
+
+        stopButton.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        });
+
+        resetButton.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            seconds = 0;
+            timerDisplay.textContent = '00:00:00';
+        });
+
+        // Code Tracking System
+        const sessionList = document.getElementById('sessionList');
+        const problemNameInput = document.getElementById('problemName');
+        const codeEditor = document.getElementById('codeEditor');
+        const languageSelect = document.getElementById('languageSelect');
+
+        function saveSession() {
+            const problemName = problemNameInput.value || 'Unnamed Problem';
+            const language = languageSelect.value;
+            const code = codeEditor.value;
+            const timeSpent = timerDisplay.textContent;
+            const date = new Date().toLocaleString();
+            const session = { problemName, language, code, timeSpent, date };
+
+            let sessions = JSON.parse(localStorage.getItem('codingSessions')) || [];
+            sessions.push(session);
+            localStorage.setItem('codingSessions', JSON.stringify(sessions));
+            displaySessions();
+        }
+
+        function displaySessions() {
+            sessionList.innerHTML = '';
+            const sessions = JSON.parse(localStorage.getItem('codingSessions')) || [];
+            sessions.forEach((session, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${session.problemName}</strong> (${session.language})<br>Time: ${session.timeSpent}<br>Date: ${session.date}`;
+                sessionList.appendChild(li);
+            });
+        }
+
+        saveButton.addEventListener('click', saveSession);
+        displaySessions();
+
+        // Syntax Highlighting
+        languageSelect.addEventListener('change', () => {
+            codeEditor.className = `language-${languageSelect.value}`;
+            Prism.highlightElement(codeEditor);
+        });
+
+        codeEditor.addEventListener('input', () => {
+            Prism.highlightElement(codeEditor);
+        });
+    </script>
+</body>
+</html>
